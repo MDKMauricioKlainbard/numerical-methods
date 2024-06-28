@@ -17,7 +17,12 @@ export class FunctionRootsController {
             @Body('leftNumber') leftNumber: number,
             @Body('rightNumber') rightNumber: number
         ): any {
+        try {
             return this.functionsRootsService.bisectionMethod(latex, leftNumber, rightNumber);
+        }
+        catch (error) {
+            return error.message
+        }
     }
 
     @Post('regula-falsi')
@@ -27,6 +32,51 @@ export class FunctionRootsController {
             @Body('leftNumber') leftNumber: number,
             @Body('rightNumber') rightNumber: number
         ): any {
+        try {
             return this.functionsRootsService.regulaFalsiMethod(latex, leftNumber, rightNumber);
+        }
+        catch (error) {
+            return error.message
+        }
+    }
+
+    @Post('secant')
+    secantMethod(
+        @Body('latex') latex: string,
+        @Body('firstApproximation') firstApproximation: number,
+        @Body('secondApproximation') secondApproximation: number
+    ): any {
+        try {
+            return this.functionsRootsService.secantMethod(latex, firstApproximation, secondApproximation)
+        }
+        catch (error) {
+            return error.message
+        }
+    }
+
+    @Post('newton-raphson')
+    newtonRaphsonMethod(
+        @Body('latex') latex: string,
+        @Body('firstApproximation') firstApproximation: number,
+    ): any {
+        try {
+            return this.functionsRootsService.newtonRaphsonMethod(latex, firstApproximation)
+        }
+        catch (error) {
+            return error.message
+        }
+    }
+
+    @Post('fixed-point')
+    fixedPointMethod(
+        @Body('latex') latex: string,
+        @Body('firstApproximation') firstApproximation: number
+    ): any {
+        try {
+            return this.functionsRootsService.fixedPointMethod(latex, firstApproximation)
+        }
+        catch (error) {
+            return error.message
+        }
     }
 }
