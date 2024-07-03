@@ -1,6 +1,7 @@
-import { Controller, Body, Post } from '@nestjs/common';
+import { Controller, Body, Post, ValidationPipe } from '@nestjs/common';
 import { FunctionsService } from 'src/functions/functions.service';
 import { FunctionRootsService } from './function-roots.service';
+import { BisectionDto, FixedPointDto, NewtonRaphsonDto, RegulaFalsiDto, SecantDto } from './dto/function-roots.dto';
 
 @Controller('function-roots')
 export class FunctionRootsController {
@@ -12,11 +13,8 @@ export class FunctionRootsController {
 
     @Post('bisection')
     bisectionMethod
-        (
-            @Body('latex') latex: string,
-            @Body('leftNumber') leftNumber: number,
-            @Body('rightNumber') rightNumber: number
-        ): any {
+        (@Body(new ValidationPipe()) bisectionDto: BisectionDto): any {
+        const { latex, leftNumber, rightNumber } = bisectionDto
         try {
             return this.functionsRootsService.bisectionMethod(latex, leftNumber, rightNumber);
         }
@@ -27,11 +25,8 @@ export class FunctionRootsController {
 
     @Post('regula-falsi')
     regulaFalsiMethod
-        (
-            @Body('latex') latex: string,
-            @Body('leftNumber') leftNumber: number,
-            @Body('rightNumber') rightNumber: number
-        ): any {
+        (@Body(new ValidationPipe()) regulaFalsiDto: RegulaFalsiDto): any {
+        const { latex, leftNumber, rightNumber } = regulaFalsiDto;
         try {
             return this.functionsRootsService.regulaFalsiMethod(latex, leftNumber, rightNumber);
         }
@@ -41,11 +36,8 @@ export class FunctionRootsController {
     }
 
     @Post('secant')
-    secantMethod(
-        @Body('latex') latex: string,
-        @Body('firstApproximation') firstApproximation: number,
-        @Body('secondApproximation') secondApproximation: number
-    ): any {
+    secantMethod(@Body(new ValidationPipe()) secantDto: SecantDto): any {
+        const { latex, firstApproximation, secondApproximation } = secantDto;
         try {
             return this.functionsRootsService.secantMethod(latex, firstApproximation, secondApproximation)
         }
@@ -55,10 +47,8 @@ export class FunctionRootsController {
     }
 
     @Post('newton-raphson')
-    newtonRaphsonMethod(
-        @Body('latex') latex: string,
-        @Body('firstApproximation') firstApproximation: number,
-    ): any {
+    newtonRaphsonMethod(@Body(new ValidationPipe()) newtonRaphsonDto: NewtonRaphsonDto): any {
+        const { latex, firstApproximation } = newtonRaphsonDto;
         try {
             return this.functionsRootsService.newtonRaphsonMethod(latex, firstApproximation)
         }
@@ -68,10 +58,8 @@ export class FunctionRootsController {
     }
 
     @Post('fixed-point')
-    fixedPointMethod(
-        @Body('latex') latex: string,
-        @Body('firstApproximation') firstApproximation: number
-    ): any {
+    fixedPointMethod(@Body(new ValidationPipe()) fixedPointDto: FixedPointDto): any {
+        const { latex, firstApproximation } = fixedPointDto;
         try {
             return this.functionsRootsService.fixedPointMethod(latex, firstApproximation)
         }

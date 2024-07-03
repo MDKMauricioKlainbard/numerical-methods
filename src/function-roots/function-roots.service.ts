@@ -1,10 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { FunctionsService } from 'src/functions/functions.service';
+import { AnswerFunctionRoots } from './dto/answer-function-roots.dto';
 
 const tolerance = 1e-9;
 const minRelativeError = 1e-9;
 const maxRelativeError = 5000;
 const maxIteration = 10000;
+
+const answerModel = (
+    newAprox: number,
+    counter: number,
+    message: string,
+    approximations: number[],
+    resolved: boolean
+) => {
+    return {
+        newAprox,
+        counter,
+        message,
+        approximations,
+        resolved
+    }
+}
 
 @Injectable()
 export class FunctionRootsService {
@@ -12,23 +29,81 @@ export class FunctionRootsService {
         private readonly functionsService: FunctionsService
     ) { }
 
-    bisectionMethod(latex: string, leftNumber: number, rightNumber: number): any {
-        const f = this.functionsService.latexFunction(latex);
-        let flag = true;
-        let newAprox: number;
-        let oldAprox: number;
-        let counter = 0;
-        let approximations = [];
 
+    initialData(
+        type: ("closed" | "open-secant" | "open-newtonraphson" | "open-fixedpoint"),
+        latex: string,
+        firstApproximation?: number) {
+        switch (type) {
+            case "closed":
+                return {
+                    f: this.functionsService.latexFunction(latex),
+                    flag: true,
+                    newAprox: undefined,
+                    oldAprox: undefined,
+                    counter: 0,
+                    approximations: []
+                }
+            case 'open-secant':
+                return {
+                    f: this.functionsService.latexFunction(latex),
+                    flag: true,
+                    newAprox: undefined,
+                    oldAprox: undefined,
+                    counter: 0,
+                    approximations: []
+                }
+            case 'open-newtonraphson':
+                return {
+                    f: this.functionsService.latexFunction(latex),
+                    df: this.functionsService.derivateFunction(latex),
+                    flag: true,
+                    newAprox: undefined,
+                    oldAprox: undefined,
+                    counter: 0,
+                    approximations: [firstApproximation]
+                }
+            case 'open-fixedpoint':
+                return {
+                    f: this.functionsService.latexFunction(latex),
+                    flag: true,
+                    newAprox: undefined,
+                    oldAprox: undefined,
+                    counter: 0,
+                    approximations: [firstApproximation]
+                }
+        }
+    }
+
+    bisectionMethod(latex: string, leftNumber: number, rightNumber: number): AnswerFunctionRoots {
+        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("closed", latex)
         if (Math.abs(f(leftNumber)) <= tolerance) {
-            return leftNumber;
+            return answerModel(
+                leftNumber,
+                0,
+                `La función evaluada en el extremo izquierdo del intervalo da: ${f(leftNumber)}`,
+                [],
+                true
+            )
         }
         if (Math.abs(f(rightNumber)) <= tolerance) {
-            return rightNumber;
+            return answerModel(
+                rightNumber,
+                0,
+                `La función evaluada en el extremo derecho del intervalo da: ${f(rightNumber)}`,
+                [],
+                true
+            )
         }
 
         if (f(leftNumber) * f(rightNumber) > 0) {
-            return "The function evaluated at both ends of the interval must have a different sign.";
+            return answerModel(
+                0,
+                0,
+                "La función evaluada en los extremos del intervalo inicial dado debe ser de distinto signo.",
+                [],
+                false
+            )
         }
 
         while (flag && counter < maxIteration) {
@@ -56,57 +131,65 @@ export class FunctionRootsService {
                 rightNumber = newAprox;
             }
         }
-        return {
+        return answerModel(
             newAprox,
             counter,
-            message: `The function evaluated in the approximation gives: ${f(newAprox)}`,
-            approximations
-        };
+            `La función evaluada en la aproximación da: ${f(newAprox)}`,
+            approximations,
+            true
+        )
     }
 
-    regulaFalsiMethod(latex: string, leftNumber: number, rightNumber: number): any {
-        const f = this.functionsService.latexFunction(latex);
-        let flag = true;
-        let newAprox: number;
-        let oldAprox: number;
-        let counter = 0;
-        let approximations = [];
+    regulaFalsiMethod(latex: string, leftNumber: number, rightNumber: number): AnswerFunctionRoots {
+        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("closed", latex)
         if (Math.abs(f(leftNumber)) <= tolerance) {
-            return leftNumber;
+            return answerModel(
+                leftNumber,
+                0,
+                `La función evaluada en el extremo izquierdo del intervalo da: ${f(leftNumber)}`,
+                [],
+                true
+            )
         }
         if (Math.abs(f(rightNumber)) <= tolerance) {
-            return rightNumber;
+            return answerModel(
+                rightNumber,
+                0,
+                `La función evaluada en el extremo derecho del intervalo da: ${f(rightNumber)}`,
+                [],
+                true
+            )
         }
 
         if (f(leftNumber) * f(rightNumber) > 0) {
-            return "The function evaluated at both ends of the interval must have a different sign.";
+            return answerModel(
+                0,
+                0,
+                "La función evaluada en ambos extremos del intervalo debe ser de distinto signo.",
+                [],
+                false
+            )
         }
 
         while (flag && counter < maxIteration) {
             if (counter >= 1) {
                 oldAprox = newAprox;
             }
-            if (f(leftNumber) - f(rightNumber) === 0) {
-                return {
-                    newAprox,
-                    counter,
-                    message: `A division by zero occurred and the calculations stopped. The function evaluated in the last approximation obtained gives: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No new approximations were calculated'}`,
-                    approximations
-                }
-            }
             if (
+                f(leftNumber) - f(rightNumber) === 0
+                ||
                 Math.abs(f(leftNumber)) === Infinity ||
                 Math.abs(f(rightNumber)) === Infinity ||
                 Number.isNaN(f(leftNumber)) ||
-                Number.isNaN(f(rightNumber))
-            ) {
+                Number.isNaN(f(rightNumber))) {
                 flag = false;
-                return {
+                return answerModel(
                     newAprox,
                     counter,
-                    message: `A division by zero occurred. The value of the function in the last approximation gives: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No new approximations were calculated'}`,
-                    approximations
-                }
+                    `Ha ocurrido una división por cero y los cálculos se detuvieron. La función evaluada en la última aproximación obtenida da: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No se calcularon nuevas aproximaciones.'}`,
+                    approximations,
+                    false
+                )
             }
             counter = counter + 1;
             newAprox = rightNumber - (f(rightNumber) * (rightNumber - leftNumber)) / (f(rightNumber) - f(leftNumber));
@@ -129,22 +212,17 @@ export class FunctionRootsService {
                 rightNumber = newAprox;
             }
         }
-        return {
+        return answerModel(
             newAprox,
             counter,
-            message: `The function evaluated in the approximation gives: ${f(newAprox)}`,
-            approximations
-        };
+            `La función evaluada en la aproximación da: ${f(newAprox)}`,
+            approximations,
+            true
+        )
     }
 
     secantMethod(latex: string, firstApproximation: number, secondApproximation: number): any {
-        const f = this.functionsService.latexFunction(latex);
-        let flag = true;
-        let newAprox: number;
-        let oldAprox: number;
-        let counter = 0;
-        let approximations = [];
-
+        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-secant", latex)
         if (firstApproximation === secondApproximation) {
             return "The two approaches cannot be equal."
         }
@@ -218,13 +296,7 @@ export class FunctionRootsService {
     }
 
     newtonRaphsonMethod(latex: string, firstApproximation: number) {
-        const f = this.functionsService.latexFunction(latex);
-        const df = this.functionsService.derivateFunction(latex);
-        let flag = true;
-        let newAprox: number;
-        let oldAprox: number;
-        let counter = 0;
-        let approximations = [firstApproximation];
+        let { f, df, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-newtonraphson", latex, firstApproximation)
         if (Math.abs(f(firstApproximation)) <= tolerance) {
             return firstApproximation;
         }
@@ -278,12 +350,7 @@ export class FunctionRootsService {
     }
 
     fixedPointMethod(latex: string, firstApproximation: number) {
-        const f = this.functionsService.latexFunction(latex);
-        let flag = true;
-        let newAprox: number;
-        let oldAprox: number;
-        let counter = 0;
-        let approximations = [firstApproximation];
+        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-fixedpoint", latex, firstApproximation)
         if (Math.abs(f(firstApproximation)) <= tolerance) {
             return firstApproximation;
         }
