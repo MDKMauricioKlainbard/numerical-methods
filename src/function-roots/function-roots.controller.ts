@@ -16,7 +16,7 @@ export class FunctionRootsController {
         (@Body(new ValidationPipe()) bisectionDto: BisectionDto): any {
         const { latex, leftNumber, rightNumber } = bisectionDto
         try {
-            return this.functionsRootsService.bisectionMethod(latex, leftNumber, rightNumber);
+            return this.functionsRootsService.bisectionMethod(latex.toString(), leftNumber, rightNumber);
         }
         catch (error) {
             return error.message

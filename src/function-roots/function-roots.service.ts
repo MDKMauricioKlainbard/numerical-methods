@@ -32,46 +32,27 @@ export class FunctionRootsService {
 
     initialData(
         type: ("closed" | "open-secant" | "open-newtonraphson" | "open-fixedpoint"),
-        latex: string,
-        firstApproximation?: number) {
+        latex: string
+    ) {
+        const basicData = {
+            f: this.functionsService.latexFunction(latex),
+            df: undefined,
+            flag: true,
+            newAprox: undefined,
+            oldAprox: undefined,
+            counter: 0,
+            approximations: []
+        }
         switch (type) {
             case "closed":
-                return {
-                    f: this.functionsService.latexFunction(latex),
-                    flag: true,
-                    newAprox: undefined,
-                    oldAprox: undefined,
-                    counter: 0,
-                    approximations: []
-                }
+                return basicData
             case 'open-secant':
-                return {
-                    f: this.functionsService.latexFunction(latex),
-                    flag: true,
-                    newAprox: undefined,
-                    oldAprox: undefined,
-                    counter: 0,
-                    approximations: []
-                }
+                return basicData
             case 'open-newtonraphson':
-                return {
-                    f: this.functionsService.latexFunction(latex),
-                    df: this.functionsService.derivateFunction(latex),
-                    flag: true,
-                    newAprox: undefined,
-                    oldAprox: undefined,
-                    counter: 0,
-                    approximations: [firstApproximation]
-                }
+                basicData.df = this.functionsService.derivateFunction(latex)
+                return basicData
             case 'open-fixedpoint':
-                return {
-                    f: this.functionsService.latexFunction(latex),
-                    flag: true,
-                    newAprox: undefined,
-                    oldAprox: undefined,
-                    counter: 0,
-                    approximations: [firstApproximation]
-                }
+                return basicData
         }
     }
 
@@ -80,7 +61,7 @@ export class FunctionRootsService {
         if (Math.abs(f(leftNumber)) <= tolerance) {
             return answerModel(
                 leftNumber,
-                0,
+                counter,
                 `La función evaluada en el extremo izquierdo del intervalo da: ${f(leftNumber)}`,
                 [],
                 true
@@ -89,7 +70,7 @@ export class FunctionRootsService {
         if (Math.abs(f(rightNumber)) <= tolerance) {
             return answerModel(
                 rightNumber,
-                0,
+                counter,
                 `La función evaluada en el extremo derecho del intervalo da: ${f(rightNumber)}`,
                 [],
                 true
@@ -99,7 +80,7 @@ export class FunctionRootsService {
         if (f(leftNumber) * f(rightNumber) > 0) {
             return answerModel(
                 0,
-                0,
+                counter,
                 "La función evaluada en los extremos del intervalo inicial dado debe ser de distinto signo.",
                 [],
                 false
@@ -145,7 +126,7 @@ export class FunctionRootsService {
         if (Math.abs(f(leftNumber)) <= tolerance) {
             return answerModel(
                 leftNumber,
-                0,
+                counter,
                 `La función evaluada en el extremo izquierdo del intervalo da: ${f(leftNumber)}`,
                 [],
                 true
@@ -154,7 +135,7 @@ export class FunctionRootsService {
         if (Math.abs(f(rightNumber)) <= tolerance) {
             return answerModel(
                 rightNumber,
-                0,
+                counter,
                 `La función evaluada en el extremo derecho del intervalo da: ${f(rightNumber)}`,
                 [],
                 true
@@ -164,7 +145,7 @@ export class FunctionRootsService {
         if (f(leftNumber) * f(rightNumber) > 0) {
             return answerModel(
                 0,
-                0,
+                counter,
                 "La función evaluada en ambos extremos del intervalo debe ser de distinto signo.",
                 [],
                 false
@@ -221,46 +202,54 @@ export class FunctionRootsService {
         )
     }
 
-    secantMethod(latex: string, firstApproximation: number, secondApproximation: number): any {
+    secantMethod(latex: string, firstApproximation: number, secondApproximation: number): AnswerFunctionRoots {
         let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-secant", latex)
         if (firstApproximation === secondApproximation) {
-            return "The two approaches cannot be equal."
+            return answerModel(
+                0,
+                counter,
+                "Las dos aproximaciones iniciales no pueden ser iguales.",
+                [],
+                false,
+            )
         }
 
         if (Math.abs(f(firstApproximation)) <= tolerance) {
-            return firstApproximation
+            return answerModel(
+                firstApproximation,
+                counter,
+                `La función evaluada en la primera aproximación dada es ${f(firstApproximation)}`,
+                [],
+                true
+            )
         }
 
         if (Math.abs(f(secondApproximation)) <= tolerance) {
-            return secondApproximation
+            return answerModel(
+                secondApproximation,
+                0,
+                `La función evaluada en la primera aproximación dada es ${f(secondApproximation)}`,
+                [],
+                true
+            )
         }
 
         while (flag && counter < maxIteration) {
             if (counter >= 1) {
                 oldAprox = newAprox;
             }
-            if (f(firstApproximation) - f(secondApproximation) === 0) {
-                return {
-                    newAprox,
-                    counter,
-                    message: `A division by zero occurred and the calculations stopped. The function evaluated in the last approximation obtained gives: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No new approximations were calculated'}`,
-                    approximations
-                }
-            }
-
-            if (
+            if (f(firstApproximation) - f(secondApproximation) === 0 ||
                 Math.abs(f(firstApproximation)) === Infinity ||
                 Math.abs(f(secondApproximation)) === Infinity ||
                 Number.isNaN(f(firstApproximation)) ||
-                Number.isNaN(f(secondApproximation))
-            ) {
-                flag = false;
-                return {
+                Number.isNaN(f(secondApproximation))) {
+                return answerModel(
                     newAprox,
                     counter,
-                    message: `A division by zero occurred. The value of the function in the last approximation gives: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No new approximations were calculated'}`,
-                    approximations
-                }
+                    `Ocurrió una división por cero y los cálculos se detuvieron. La función evaluada en la última aproximación obtenida da: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No se calcularon nuevas aproximaciones.'}`,
+                    approximations,
+                    false
+                )
             }
             counter = counter + 1;
             newAprox = firstApproximation - (f(firstApproximation) * (secondApproximation - firstApproximation)) / (f(secondApproximation) - f(firstApproximation));
@@ -274,47 +263,46 @@ export class FunctionRootsService {
                 if (relativeError <= minRelativeError) {
                     flag = false;
                 }
-                if (relativeError > maxRelativeError) {
-                    flag = false;
-                    return {
-                        newAprox,
-                        counter,
-                        message: `The method diverges. The function evaluated in the last approximation obtained gives: ${f(newAprox)}`,
-                        approximations
-                    }
-                }
             }
             firstApproximation = secondApproximation;
             secondApproximation = newAprox;
         }
-        return {
+        return answerModel(
             newAprox,
             counter,
-            message: `The function evaluated in the approximation gives: ${f(newAprox)}`,
-            approximations
-        };
+            `La función evaluada en la última aproximación da: ${f(newAprox)}`,
+            approximations,
+            true
+        )
     }
 
-    newtonRaphsonMethod(latex: string, firstApproximation: number) {
-        let { f, df, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-newtonraphson", latex, firstApproximation)
+    newtonRaphsonMethod(latex: string, firstApproximation: number): AnswerFunctionRoots {
+        let { f, df, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-newtonraphson", latex)
         if (Math.abs(f(firstApproximation)) <= tolerance) {
-            return firstApproximation;
+            return answerModel(
+                firstApproximation,
+                counter,
+                `La función evaluada en la aproximación inicial es: ${f(firstApproximation)}`,
+                [],
+                true
+            )
         }
 
         while (flag && counter < maxIteration) {
             if (
                 Math.abs(f(firstApproximation)) === Infinity ||
                 Math.abs(df(firstApproximation)) === Infinity ||
+                df(firstApproximation) === 0 ||
                 Number.isNaN(f(firstApproximation)) ||
                 Number.isNaN(df(firstApproximation))
             ) {
-                flag = false;
-                return {
+                return answerModel(
                     newAprox,
                     counter,
-                    message: `A division by zero occurred. The value of the function in the last approximation gives: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No new approximations were calculated'}`,
-                    approximations
-                }
+                    `Ocurrió una división por cero y los cálculos se detuvieron. La función evaluada en la última aproximación obtenida da: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No se calcularon nuevas aproximaciones.'}`,
+                    approximations,
+                    false
+                )
             }
             counter = counter + 1;
             newAprox = firstApproximation - f(firstApproximation) / df(firstApproximation)
@@ -322,50 +310,47 @@ export class FunctionRootsService {
             if (Math.abs(f(newAprox)) <= tolerance) {
                 flag = false;
             }
-
             if (counter >= 1) {
                 const relativeError = Math.abs((oldAprox - newAprox) / newAprox) * 100;
                 if (relativeError <= minRelativeError) {
                     flag = false;
                 }
-                if (relativeError > maxRelativeError || isNaN(relativeError)) {
-                    flag = false;
-                    return {
-                        newAprox,
-                        counter,
-                        message: `The method diverges. The function evaluated in the last approximation obtained gives: ${f(newAprox)}`,
-                        approximations
-                    }
-                }
             }
             oldAprox = firstApproximation;
             firstApproximation = newAprox;
         }
-        return {
+        return answerModel(
             newAprox,
             counter,
-            message: `The function evaluated in the approximation gives: ${f(newAprox)}`,
+            `La función evaluada en la última aproximación obtenida da: ${f(newAprox)}`,
             approximations,
-        };
+            true
+        )
     }
 
-    fixedPointMethod(latex: string, firstApproximation: number) {
-        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-fixedpoint", latex, firstApproximation)
+    fixedPointMethod(latex: string, firstApproximation: number): AnswerFunctionRoots {
+        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-fixedpoint", latex)
         if (Math.abs(f(firstApproximation)) <= tolerance) {
-            return firstApproximation;
+            return answerModel(
+                firstApproximation,
+                counter,
+                `La función evaluada en la aproximación inicial da: ${f(firstApproximation)}`,
+                [],
+                true
+            )
         }
         while (flag && counter < maxIteration) {
             if (
                 Math.abs(f(firstApproximation)) === Infinity ||
                 Number.isNaN(f(firstApproximation))
             ) {
-                flag = false;
-                return {
+                return answerModel(
                     newAprox,
                     counter,
-                    message: `A division by zero occurred. The value of the function in the last approximation gives: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No new approximations were calculated'}`,
-                    approximations
-                }
+                    `Ocurrió una división por cero y los cálculos se detuvieron. La función evaluada en la última aproximación obtenida da: ${typeof (newAprox) === 'number' ? f(newAprox) : 'No se calcularon nuevas aproximaciones.'}`,
+                    approximations,
+                    false
+                )
             }
             counter = counter + 1;
             newAprox = f(firstApproximation)
@@ -379,24 +364,16 @@ export class FunctionRootsService {
                 if (relativeError <= minRelativeError) {
                     flag = false;
                 }
-                if (relativeError > maxRelativeError || isNaN(relativeError)) {
-                    flag = false;
-                    return {
-                        newAprox,
-                        counter,
-                        message: `The method diverges. The function evaluated in the last approximation obtained gives: ${f(newAprox)}`,
-                        approximations
-                    }
-                }
             }
             oldAprox = firstApproximation;
             firstApproximation = newAprox;
         }
-        return {
+        return answerModel(
             newAprox,
             counter,
-            message: `The function evaluated in the approximation gives: ${f(newAprox)}`,
+            `La función evaluada en la última aproximación obtenida da: ${f(newAprox)}`,
             approximations,
-        };
+            true
+        )
     }
 }

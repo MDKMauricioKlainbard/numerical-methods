@@ -141,7 +141,6 @@ const LatexToJs = function (input) {
     sinCosTanFramework = function (func, input) {
         const pat1 = new RegExp("\\\\" + func + "\\\\left\\(([0-9a-zA-Z\\.\\+\\*\\-\\\\\\(\\)\\/]+)\\\\right\\)");
         // eg: /\\sin\\left\(([0-9a-zA-Z\.\+\*\-\\\(\)\/]+)\\right\)/
-
         while (input.search(pat1) >= 0) {
             input = input.replace(pat1, func + "($1)");
         }
@@ -157,7 +156,6 @@ const LatexToJs = function (input) {
         if (input.search(pat3) >= 0) {
             input = convert_others(func, input);
         }
-
         return input;
     };
 
@@ -275,7 +273,5 @@ const LatexToJs = function (input) {
         console.log("has Error")
     }
 }
-
-console.log(LatexToJs("\frac{1}{x}"))
 
 export default LatexToJs;

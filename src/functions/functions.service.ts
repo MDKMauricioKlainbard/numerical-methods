@@ -8,7 +8,7 @@ const math = create(all);
 export class FunctionsService {
     
     latexFunction(latex: string): any {
-        let expression = math.parse(LatexToJs(latex));
+        let expression = math.parse(latex);
         const fn = (): any => {
             try {
                 const f = math.evaluate(`f(x) = ${expression}`)
@@ -22,7 +22,7 @@ export class FunctionsService {
     }
 
     derivateFunction(latex: string): any {
-        const expression = math.parse(LatexToJs(latex));
+        const expression = math.parse(latex);
         const dfn = (): any => {
             try {
                 const derivativeExpression = math.derivative(expression, 'x');
