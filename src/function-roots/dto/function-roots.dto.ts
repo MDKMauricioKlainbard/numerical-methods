@@ -47,4 +47,7 @@ export class FixedPointDto {
 
     @IsNumber()
     firstApproximation: number;
+
+    @IsNumber()
+    parameter: number;
 }

@@ -59,9 +59,9 @@ export class FunctionRootsController {
 
     @Post('fixed-point')
     fixedPointMethod(@Body(new ValidationPipe()) fixedPointDto: FixedPointDto): any {
-        const { latex, firstApproximation } = fixedPointDto;
+        const { latex, firstApproximation, parameter } = fixedPointDto;
         try {
-            return this.functionsRootsService.fixedPointMethod(latex, firstApproximation)
+            return this.functionsRootsService.fixedPointMethod(latex, firstApproximation, parameter)
         }
         catch (error) {
             return error.message

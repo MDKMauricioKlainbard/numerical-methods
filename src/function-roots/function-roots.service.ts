@@ -328,13 +328,15 @@ export class FunctionRootsService {
         )
     }
 
-    fixedPointMethod(latex: string, firstApproximation: number): AnswerFunctionRoots {
-        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-fixedpoint", latex)
-        if (Math.abs(f(firstApproximation)) <= tolerance) {
+    fixedPointMethod(latex: string, firstApproximation: number, parameter: number): AnswerFunctionRoots {
+        const modifiedLatex = `x+${parameter}*(${latex})`
+        const originalFunction = this.functionsService.latexFunction(latex);
+        let { f, flag, newAprox, oldAprox, counter, approximations } = this.initialData("open-fixedpoint", modifiedLatex)
+        if (Math.abs(originalFunction(firstApproximation)) <= tolerance) {
             return answerModel(
                 firstApproximation,
                 counter,
-                `La función evaluada en la aproximación inicial da: ${f(firstApproximation)}`,
+                `La función evaluada en la aproximación inicial da: ${originalFunction(firstApproximation)}`,
                 [],
                 true
             )
@@ -355,7 +357,7 @@ export class FunctionRootsService {
             counter = counter + 1;
             newAprox = f(firstApproximation)
             approximations.push(newAprox);
-            if (Math.abs(f(newAprox)) <= tolerance) {
+            if (Math.abs(originalFunction(newAprox)) <= tolerance) {
                 flag = false;
             }
 
@@ -371,7 +373,7 @@ export class FunctionRootsService {
         return answerModel(
             newAprox,
             counter,
-            `La función evaluada en la última aproximación obtenida da: ${f(newAprox)}`,
+            `La función evaluada en la última aproximación obtenida da: ${originalFunction(newAprox)}`,
             approximations,
             true
         )
